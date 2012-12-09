@@ -36,7 +36,7 @@
 #include <linux/usb/ch9.h>
 #include <linux/usb/f_mtp.h>
 
-#define MTP_BULK_BUFFER_SIZE       16384
+#define MTP_BULK_BUFFER_SIZE       131072
 #define INTR_BUFFER_SIZE           28
 
 #define MTP_THREAD_UNSUPPORT	0
@@ -76,8 +76,8 @@ static int htc_mtp_open_state;
 
 static struct pm_qos_request_list mtp_req_freq;
 static struct pm_qos_request_list req_cpus;
-extern void release_screen_off_freq_lock(unsigned int capfreq);
-extern void lock_screen_off_freq_lock();
+//extern void release_screen_off_freq_lock(unsigned int capfreq );
+//extern void lock_screen_off_freq_lock();
 static int release_screen_off_flag;
 static struct work_struct mtp_perf_lock_on_work;
 
@@ -301,13 +301,7 @@ struct mtp_device_status {
 
 /* temporary variable used between mtp_open() and mtp_gadget_bind() */
 static struct mtp_dev *_mtp_dev;
-<<<<<<< HEAD
-
-void tegra_udc_set_phy_clk(bool pull_up);
-static void mtp_setup_perflock(struct work_struct *data)
-=======
 static void mtp_setup_perflock()
->>>>>>> d9d513f... fixes for usb tethering
 {
 	struct mtp_dev *dev = _mtp_dev;
 	struct usb_composite_dev    *cdev = dev->cdev;
@@ -315,33 +309,14 @@ static void mtp_setup_perflock()
 	/* reset the timer */
 	del_timer(&dev->perf_timer);
 	if (dev->mtp_perf_lock_on) {
-<<<<<<< HEAD
-		DBG(cdev, "[USB][MTP] %s, perf on\n", __func__);
-		if (release_screen_off_flag) {
-			tegra_udc_set_phy_clk(true);
-			release_screen_off_freq_lock(PM_QOS_CPU_FREQ_MAX_DEFAULT_VALUE);
-			release_screen_off_flag = 0;
-		}
-		pm_qos_update_request(&mtp_req_freq, (s32)PM_QOS_CPU_FREQ_MAX_DEFAULT_VALUE);
-		pm_qos_update_request(&req_cpus, (s32)PM_QOS_MAX_ONLINE_CPUS_DEFAULT_VALUE);
-=======
 		printk(KERN_INFO "[USB][MTP] %s, perf on\n", __func__);
-		pm_qos_update_request(&mtp_req_freq, (s32)PM_QOS_CPU_USB_FREQ_MAX_DEFAULT_VALUE);
-		pm_qos_update_request(&req_cpus, (s32)PM_QOS_MIN_ONLINE_CPUS_USB_TWO_VALUE);
->>>>>>> d9d513f... fixes for usb tethering
+		//pm_qos_update_request(&mtp_req_freq, (s32)PM_QOS_CPU_USB_FREQ_MAX_DEFAULT_VALUE);
+		//pm_qos_update_request(&req_cpus, (s32)PM_QOS_MIN_ONLINE_CPUS_USB_TWO_VALUE);
 
 	} else {
-		DBG(cdev, "[USB][MTP] %s, perf off\n", __func__);
-		pm_qos_update_request(&mtp_req_freq, (s32)PM_QOS_CPU_FREQ_MIN_DEFAULT_VALUE);
-		pm_qos_update_request(&req_cpus, (s32)PM_QOS_MIN_ONLINE_CPUS_DEFAULT_VALUE);
-<<<<<<< HEAD
-		if (!release_screen_off_flag) {
-			lock_screen_off_freq_lock();
-			release_screen_off_flag = 1;
-			tegra_udc_set_phy_clk(false);
-		}
-=======
->>>>>>> d9d513f... fixes for usb tethering
+		printk(KERN_INFO "[USB][MTP] %s, perf off\n", __func__);
+		//pm_qos_update_request(&mtp_req_freq, (s32)PM_QOS_CPU_FREQ_MIN_DEFAULT_VALUE);
+		//pm_qos_update_request(&req_cpus, (s32)PM_QOS_MIN_ONLINE_CPUS_DEFAULT_VALUE);
 	}
 }
 
@@ -1654,8 +1629,8 @@ static int mtp_setup(void)
 	htc_mtp_open_state = 0;
 
 	INIT_WORK(&mtp_perf_lock_on_work, mtp_setup_perflock);
-	pm_qos_add_request(&mtp_req_freq, PM_QOS_CPU_FREQ_MIN, (s32)PM_QOS_CPU_FREQ_MIN_DEFAULT_VALUE);
-	pm_qos_add_request(&req_cpus, PM_QOS_MIN_ONLINE_CPUS, (s32)PM_QOS_MIN_ONLINE_CPUS_DEFAULT_VALUE);
+	//pm_qos_add_request(&mtp_req_freq, PM_QOS_CPU_FREQ_MIN, (s32)PM_QOS_CPU_FREQ_MIN_DEFAULT_VALUE);
+	//pm_qos_add_request(&req_cpus, PM_QOS_MIN_ONLINE_CPUS, (s32)PM_QOS_MIN_ONLINE_CPUS_DEFAULT_VALUE);
 	setup_timer(&dev->perf_timer, mtp_perf_lock_disable, (unsigned long)dev);
 
 
