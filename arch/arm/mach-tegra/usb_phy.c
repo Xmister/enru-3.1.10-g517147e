@@ -51,9 +51,10 @@
 #define AHB_MEM_PREFETCH_CFG2		0xf0
 #define PREFETCH_ENB			(1 << 31)
 
-#define DEBUG
-#ifdef DEBUG
-#define DBG(stuff...)		if(get_radio_flag() & 0x0008){pr_info("usb_phy: " stuff);}
+#define DEBUG 0
+
+#if DEBUG
+#define DBG(stuff...)		pr_info("usb_phy: " stuff)
 #else
 #define DBG(stuff...)		do {} while (0)
 #endif
