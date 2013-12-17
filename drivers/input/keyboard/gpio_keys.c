@@ -35,6 +35,7 @@
 #ifdef CONFIG_TOUCHSCREEN_SYNAPTICS_SWEEP2WAKE
 #include <linux/synaptics_i2c_rmi.h>
 #endif
+
 struct gpio_button_data {
 	struct gpio_keys_button *button;
 	struct input_dev *input;
@@ -615,6 +616,7 @@ static int __devinit gpio_keys_probe(struct platform_device *pdev)
 		printk(KERN_INFO "[sweep2wake]: set device %s\n", input->name);
 	}
 #endif
+
 
 	PWR_MISTOUCH_gpio = pdata->PWR_MISTOUCH_gpio;
 	mistouch_gpio_normal = pdata->mistouch_gpio_normal;

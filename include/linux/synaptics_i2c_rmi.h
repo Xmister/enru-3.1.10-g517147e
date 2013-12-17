@@ -167,7 +167,6 @@ enum {
 };
 
 #ifdef CONFIG_TOUCHSCREEN_SYNAPTICS_SWEEP2WAKE
-/* Sweep2Wake */
 extern void sweep2wake_setdev(struct input_dev * input_device);
 #endif
 
