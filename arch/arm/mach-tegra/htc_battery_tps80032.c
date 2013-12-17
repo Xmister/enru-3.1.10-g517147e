@@ -520,10 +520,10 @@ static void usb_status_notifier_func(int online)
 			htc_batt_info.rep.charging_source = CHARGER_AC;
 		} else {
 			if(fast_charge){
-				BATT_LOG("fast_charge is set to force AC charging");	
+				BATT_LOG("fast_charge is set to force AC charging");
 				htc_batt_info.rep.charging_source = CHARGER_AC;
-			} else 
-				htc_batt_info.rep.charging_source = CHARGER_USB;
+		} else
+			htc_batt_info.rep.charging_source = CHARGER_USB;
 		}
 		break;
 	case CONNECT_TYPE_AC:
@@ -1784,15 +1784,15 @@ static void htc_battery_complete(struct device *dev)
 static void reevaluate_charger()
 {
 	BATT_LOG("%s", __func__);
-	
+
 	if ( !!(get_kernel_flag() & ALL_AC_CHARGING) ) {
 		BATT_LOG("Debug flag is set to force AC charging, fake as AC");
 		htc_batt_info.rep.charging_source = CHARGER_AC;
 	} else {
 		if(fast_charge){
-			BATT_LOG("fast_charge is set to force AC charging");	
+			BATT_LOG("fast_charge is set to force AC charging");
 			htc_batt_info.rep.charging_source = CHARGER_AC;
-		} else 
+		} else
 			htc_batt_info.rep.charging_source = CHARGER_USB;
 	}
 
@@ -1817,17 +1817,17 @@ static struct dev_pm_ops htc_battery_tps80032_pm_ops = {
 
 static ssize_t
 fast_charge_show(struct device *dev,
-    struct device_attribute *attr,
-    char *buf)
+					struct device_attribute *attr,
+					char *buf)
 {
-    return sprintf(buf, "%d\n", fast_charge);
+	return sprintf(buf, "%d\n", fast_charge);
 }
 
 static ssize_t
 fast_charge_store(struct device *dev,
-    struct device_attribute *attr, const char *buf, size_t size)
+		struct device_attribute *attr, const char *buf, size_t size)
 {
-    int value;
+	int value;
 
 	value = ((int) simple_strtoul(buf, NULL, 10));
 	if(value == 0 || value == 1){
@@ -1839,7 +1839,7 @@ fast_charge_store(struct device *dev,
 	}
 	else
 		return -EINVAL;
-			
+
 	return size;
 }
 
@@ -1853,8 +1853,9 @@ static struct device_attribute tps80032_batt_attrs[] = {
 	__ATTR(quickboot_enabled, S_IWUSR, NULL, tps80032_qb_store_attributes),
 	__ATTR(fake_temp, S_IWUSR, NULL, tps80032_fake_temp_store_attributes),
 	__ATTR(suspend_1_percent, S_IRUGO, tps80032_batt_show_attributes, NULL),
+	__ATTR(eoc_stop, S_IWUSR, NULL, tps80032_notify_eoc_stop_attributes),
 	__ATTR(fast_charge, S_IRUGO|S_IWUGO, fast_charge_show, fast_charge_store),
-};
+	};
 
 static ssize_t tps80032_batt_show_attributes(struct device *dev,
 					struct device_attribute *attr,
