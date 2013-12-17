@@ -641,18 +641,14 @@ static inline struct task_group *task_group(struct task_struct *p)
 /* Change a task's cfs_rq and parent entity if it moves across CPUs/groups */
 static inline void set_task_rq(struct task_struct *p, unsigned int cpu)
 {
-#if defined(CONFIG_FAIR_GROUP_SCHED) || defined(CONFIG_RT_GROUP_SCHED)
-	struct task_group *tg = task_group(p);
-#endif
-
 #ifdef CONFIG_FAIR_GROUP_SCHED
-	p->se.cfs_rq = tg->cfs_rq[cpu];
-	p->se.parent = tg->se[cpu];
+	p->se.cfs_rq = task_group(p)->cfs_rq[cpu];
+	p->se.parent = task_group(p)->se[cpu];
 #endif
 
 #ifdef CONFIG_RT_GROUP_SCHED
-	p->rt.rt_rq  = tg->rt_rq[cpu];
-	p->rt.parent = tg->rt_se[cpu];
+	p->rt.rt_rq  = task_group(p)->rt_rq[cpu];
+	p->rt.parent = task_group(p)->rt_se[cpu];
 #endif
 }
 
@@ -1215,16 +1211,6 @@ static void resched_cpu(int cpu)
 	raw_spin_unlock_irqrestore(&rq->lock, flags);
 }
 
-void force_cpu_resched(int cpu)
-{
-       struct rq *rq = cpu_rq(cpu);
-       unsigned long flags;
-
-       raw_spin_lock_irqsave(&rq->lock, flags);
-       resched_task(cpu_curr(cpu));
-       raw_spin_unlock_irqrestore(&rq->lock, flags);
-}
-
 #ifdef CONFIG_NO_HZ
 /*
  * In the semi idle case, use the nearest busy cpu for migrating timers
@@ -1335,11 +1321,6 @@ static void sched_rt_avg_update(struct rq *rq, u64 rt_delta)
 
 static void sched_avg_update(struct rq *rq)
 {
-}
-
-void force_cpu_resched(int cpu)
-{
-       set_need_resched();
 }
 #endif /* CONFIG_SMP */
 
@@ -4267,24 +4248,6 @@ void sched_fork(struct task_struct *p)
 	put_cpu();
 }
 
-#ifdef CONFIG_PREEMPT_COUNT_CPU
-
-/*
- * Fetch the preempt count of some cpu's current task.  Must be called
- * with interrupts blocked.  Stale return value.
- *
- * No locking needed as this always wins the race with context-switch-out
- * + task destruction, since that is so heavyweight.  The smp_rmb() is
- * to protect the pointers in that race, not the data being pointed to
- * (which, being guaranteed stale, can stand a bit of fuzziness).
- */
-int preempt_count_cpu(int cpu)
-{
-       smp_rmb(); /* stop data prefetch until program ctr gets here */
-       return task_thread_info(cpu_curr(cpu))->preempt_count;
-}
-#endif
-
 /*
  * wake_up_new_task - wake up a newly created task for the first time.
  *
@@ -4660,18 +4623,6 @@ unsigned long avg_nr_running(void)
 	return sum;
 }
 
-unsigned long get_avg_nr_running(unsigned int cpu)
-{
-	struct rq *q;
-
-	if (cpu >= nr_cpu_ids)
-		return 0;
-
-	q = cpu_rq(cpu);
-
-	return q->ave_nr_running;
-}
-
 unsigned long nr_iowait_cpu(int cpu)
 {
 	struct rq *this = cpu_rq(cpu);
@@ -4688,7 +4639,6 @@ unsigned long this_cpu_load(void)
 /* Variables and functions for calc_load */
 static atomic_long_t calc_load_tasks;
 static unsigned long calc_load_update;
-static unsigned long idle_mask_update;
 unsigned long avenrun[3];
 EXPORT_SYMBOL(avenrun);
 
@@ -4724,37 +4674,13 @@ calc_load(unsigned long load, unsigned long exp, unsigned long active)
  */
 static atomic_long_t calc_load_tasks_idle;
 
-/*
- * Those cpus whose load alread has been calculated in this LOAD_FREQ
- * period will be masked.
- */
-struct cpumask  cpu_load_update_mask;
-
-/*
- * Fold unmask cpus' idle load
- */
-static atomic_long_t calc_unmask_cpu_load_idle;
-
 static void calc_load_account_idle(struct rq *this_rq)
 {
 	long delta;
-	int cpu = smp_processor_id();
 
 	delta = calc_load_fold_active(this_rq);
-	if (delta) {
+	if (delta)
 		atomic_long_add(delta, &calc_load_tasks_idle);
-		/*
-		 * calc_unmask_cpu_load_idle is only used between the first
-		 * cpu load accounting
-		 * and the last cpu load accounting in every LOAD_FREQ period,
-		 * and records idle load on
-		 * those unmask cpus.
-		 */
-		if (!cpumask_empty(&cpu_load_update_mask) &&
-			!cpumask_test_cpu(cpu, &cpu_load_update_mask)) {
-			atomic_long_add(delta, &calc_unmask_cpu_load_idle);
-		}
-	}
 }
 
 static long calc_load_fold_idle(void)
@@ -4766,18 +4692,6 @@ static long calc_load_fold_idle(void)
 	 */
 	if (atomic_long_read(&calc_load_tasks_idle))
 		delta = atomic_long_xchg(&calc_load_tasks_idle, 0);
-
-	return delta;
-}
-
-static long calc_load_fold_unmask_idle(void)
-{
-	long delta = 0;
-
-	if (atomic_long_read(&calc_unmask_cpu_load_idle)) {
-		delta = atomic_long_xchg(&calc_unmask_cpu_load_idle, 0);
-		atomic_long_sub(delta, &calc_load_tasks_idle);
-	}
 
 	return delta;
 }
@@ -4876,9 +4790,6 @@ static void calc_global_nohz(unsigned long ticks)
 	if (delta)
 		atomic_long_add(delta, &calc_load_tasks);
 
-	cpumask_clear(&cpu_load_update_mask);
-	atomic_long_xchg(&calc_unmask_cpu_load_idle, 0);
-
 	/*
 	 * If we were idle for multiple load cycles, apply them.
 	 */
@@ -4937,26 +4848,6 @@ void get_avenrun(unsigned long *loads, unsigned long offset, int shift)
 }
 
 /*
-+ * Prepare cpu_load_update_mask for the comming per-cpu load calculating
-+ */
-void prepare_idle_mask(unsigned long ticks)
-{
-	if (time_before(jiffies, idle_mask_update - 10))
-		return;
-
-	cpumask_clear(&cpu_load_update_mask);
-	/*
-	 * calc_unmask_cpu_load_idle is part of calc_load_tasks_idle,
-	 * and calc_load_tasks_ide will be folded into calc_load_tasks
-	 * immediately.
-	 * So no need to keep this now.
-	 */
-	atomic_long_xchg(&calc_unmask_cpu_load_idle, 0);
-
-	idle_mask_update += LOAD_FREQ;
-}
-
-/*
  * calc_load - update the avenrun load estimates 10 ticks after the
  * CPUs have updated calc_load_tasks.
  */
@@ -4986,30 +4877,12 @@ void calc_global_load(unsigned long ticks)
 static void calc_load_account_active(struct rq *this_rq)
 {
 	long delta;
-	int cpu = smp_processor_id();
 
 	if (time_before(jiffies, this_rq->calc_load_update))
 		return;
 
-	/*
-	 * cpu_load_update_mask empty means the first cpu
-	 * doing load calculating. Global idle should be
-	 * folded into calc_load_tasks, so we just push it
-	 * to calc_unmask_cpu_load_idle.
-	 */
-	if (cpumask_empty(&cpu_load_update_mask))
-		atomic_long_set(&calc_unmask_cpu_load_idle,
-			atomic_long_read(&calc_load_tasks_idle));
-	/*
-	 * Mask this cpu as load calculated,
-	 * then go-idle in this cpu won't take effect
-	 * to calc_load_tasks.
-	 */
-	cpumask_set_cpu(cpu, &cpu_load_update_mask);
-
 	delta  = calc_load_fold_active(this_rq);
-	/* Fold unmask cpus' load into calc_load_tasks */
-	delta += calc_load_fold_unmask_idle();
+	delta += calc_load_fold_idle();
 	if (delta)
 		atomic_long_add(delta, &calc_load_tasks);
 
@@ -5639,7 +5512,7 @@ void __kprobes add_preempt_count(int val)
 	if (DEBUG_LOCKS_WARN_ON((preempt_count() < 0)))
 		return;
 #endif
-	__add_preempt_count(val);
+	preempt_count() += val;
 #ifdef CONFIG_DEBUG_PREEMPT
 	/*
 	 * Spinlock count overflowing soon?
@@ -5670,7 +5543,7 @@ void __kprobes sub_preempt_count(int val)
 
 	if (preempt_count() == val)
 		trace_preempt_on(CALLER_ADDR0, get_parent_ip(CALLER_ADDR1));
-	__sub_preempt_count(val);
+	preempt_count() -= val;
 }
 EXPORT_SYMBOL(sub_preempt_count);
 
@@ -5812,9 +5685,6 @@ need_resched:
 	if (likely(prev != next)) {
 		rq->nr_switches++;
 		rq->curr = next;
-#ifdef CONFIG_PREEMPT_COUNT_CPU
-		smp_wmb();
-#endif
 		++*switch_count;
 
 		context_switch(rq, prev, next); /* unlocks the rq */
@@ -7339,8 +7209,6 @@ void sched_show_task(struct task_struct *p)
 {
 	unsigned long free = 0;
 	unsigned state;
-	cputime_t utime, stime;
-
 
 	state = p->state ? __ffs(p->state) + 1 : 0;
 	printk(KERN_INFO "%-15.15s %c", p->comm,
@@ -7372,6 +7240,7 @@ void sched_show_task(struct task_struct *p)
 				jiffies_to_msecs(jiffies - p->blocked_since));
 #endif
 
+	cputime_t utime, stime;
 	task_times(p, &utime, &stime);
 	printk(KERN_CONT "  schedstat=( %llu %llu %lu ) utm=%lu stm=%lu\n",
 			(unsigned long long)p->se.sum_exec_runtime,
@@ -9695,8 +9564,6 @@ void __init sched_init(void)
 
 	calc_load_update = jiffies + LOAD_FREQ;
 
-	idle_mask_update = jiffies + LOAD_FREQ;
-
 	/*
 	 * During early bootup we pretend to be a normal task:
 	 */
@@ -9875,9 +9742,6 @@ struct task_struct *curr_task(int cpu)
 void set_curr_task(int cpu, struct task_struct *p)
 {
 	cpu_curr(cpu) = p;
-#ifdef CONFIG_PREEMPT_COUNT_CPU
-	smp_wmb();
-#endif
 }
 
 #endif

@@ -301,7 +301,9 @@ struct mtp_device_status {
 
 /* temporary variable used between mtp_open() and mtp_gadget_bind() */
 static struct mtp_dev *_mtp_dev;
-static void mtp_setup_perflock()
+
+void tegra_udc_set_phy_clk(bool pull_up);
+static void mtp_setup_perflock(struct work_struct *data)
 {
 	struct mtp_dev *dev = _mtp_dev;
 	struct usb_composite_dev    *cdev = dev->cdev;
@@ -309,14 +311,24 @@ static void mtp_setup_perflock()
 	/* reset the timer */
 	del_timer(&dev->perf_timer);
 	if (dev->mtp_perf_lock_on) {
-		printk(KERN_INFO "[USB][MTP] %s, perf on\n", __func__);
-		//pm_qos_update_request(&mtp_req_freq, (s32)PM_QOS_CPU_USB_FREQ_MAX_DEFAULT_VALUE);
-		//pm_qos_update_request(&req_cpus, (s32)PM_QOS_MIN_ONLINE_CPUS_USB_TWO_VALUE);
+		DBG(cdev, "[USB][MTP] %s, perf on\n", __func__);
+		if (release_screen_off_flag) {
+			tegra_udc_set_phy_clk(true);
+			release_screen_off_freq_lock(PM_QOS_CPU_FREQ_MAX_DEFAULT_VALUE);
+			release_screen_off_flag = 0;
+		}
+		pm_qos_update_request(&mtp_req_freq, (s32)PM_QOS_CPU_FREQ_MAX_DEFAULT_VALUE);
+		pm_qos_update_request(&req_cpus, (s32)PM_QOS_MAX_ONLINE_CPUS_DEFAULT_VALUE);
 
 	} else {
-		printk(KERN_INFO "[USB][MTP] %s, perf off\n", __func__);
-		//pm_qos_update_request(&mtp_req_freq, (s32)PM_QOS_CPU_FREQ_MIN_DEFAULT_VALUE);
-		//pm_qos_update_request(&req_cpus, (s32)PM_QOS_MIN_ONLINE_CPUS_DEFAULT_VALUE);
+		DBG(cdev, "[USB][MTP] %s, perf off\n", __func__);
+		pm_qos_update_request(&mtp_req_freq, (s32)PM_QOS_CPU_FREQ_MIN_DEFAULT_VALUE);
+		pm_qos_update_request(&req_cpus, (s32)PM_QOS_MIN_ONLINE_CPUS_DEFAULT_VALUE);
+		if (!release_screen_off_flag) {
+			lock_screen_off_freq_lock();
+			release_screen_off_flag = 1;
+			tegra_udc_set_phy_clk(false);
+		}
 	}
 }
 
