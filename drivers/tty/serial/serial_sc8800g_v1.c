@@ -2389,7 +2389,7 @@ static int sc8800g_remove_sysfs_mdm_alive_attrs_v1(struct device *dev)
 
 #endif
 
-static struct tty_driver *sc8800g_tty_driver_v1;
+static struct tty_driver *sc8800g_tty_driver_v1 __refdata;
 static int tty_registered_v1 = 0;;
 static int __devinit sc8800g_probe_v1(struct spi_device *spi)
 {
