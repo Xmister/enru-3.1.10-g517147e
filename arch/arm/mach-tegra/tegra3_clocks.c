@@ -850,7 +850,7 @@ static int tegra3_cpu_clk_set_rate(struct clk *c, unsigned long rate)
      * to port to any other platforms,
      * pls. modify lt_rate to lt_rate[NR_CPUS] accordingly
      */
-    static unsigned long lt_rate = 0;
+//    static unsigned long lt_rate = 0;
 
 	if (c->dvfs) {
 		if (!c->dvfs->dvfs_rail)
@@ -1648,6 +1648,8 @@ static int tegra3_pll_clk_set_rate(struct clk *c, unsigned long rate)
 	unsigned long input_rate;
 	const struct clk_pll_freq_table *sel;
 	struct clk_pll_freq_table cfg;
+	unsigned long flags=0;
+
 
 	pr_debug("%s: %s %lu\n", __func__, c->name, rate);
 
@@ -1765,7 +1767,6 @@ static int tegra3_pll_clk_set_rate(struct clk *c, unsigned long rate)
 	}
 	MF_DEBUG("00000001");
 
-	unsigned long flags;
 	if (c->reg == 0xd0)
 		spin_lock_irqsave(&dc_spinlock_clk, flags);
 	clk_writel(val, c->reg + PLL_BASE);

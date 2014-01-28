@@ -7339,6 +7339,8 @@ void sched_show_task(struct task_struct *p)
 {
 	unsigned long free = 0;
 	unsigned state;
+	cputime_t utime, stime;
+
 
 	state = p->state ? __ffs(p->state) + 1 : 0;
 	printk(KERN_INFO "%-15.15s %c", p->comm,
@@ -7370,7 +7372,6 @@ void sched_show_task(struct task_struct *p)
 				jiffies_to_msecs(jiffies - p->blocked_since));
 #endif
 
-	cputime_t utime, stime;
 	task_times(p, &utime, &stime);
 	printk(KERN_CONT "  schedstat=( %llu %llu %lu ) utm=%lu stm=%lu\n",
 			(unsigned long long)p->se.sum_exec_runtime,

@@ -756,7 +756,7 @@ EXPORT_SYMBOL (no_thermal_throttle_limit);
 // maxwen: apply all limits to a frequency
 static unsigned int get_scaled_freq (unsigned int target_freq)
 {
-	unsigned int save_freq = target_freq;
+//	unsigned int save_freq = target_freq;
     /* chip-dependent, such as thermal throttle, edp, and user-defined freq. cap */
     target_freq = tegra_throttle_governor_speed (target_freq);
 	target_freq = edp_governor_speed (target_freq);

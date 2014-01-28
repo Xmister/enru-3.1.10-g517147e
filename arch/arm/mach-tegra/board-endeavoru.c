@@ -296,10 +296,10 @@ static void tegra_vibrator_init(void)
 #endif
 
 
-static struct platform_device endeavoru_rfkill = {
+/*static struct platform_device endeavoru_rfkill = {
 	.name = "endeavoru_rfkill",
 	.id = -1,
-};
+};*/
 
 
 /* TI 128x Bluetooth begin */
@@ -508,11 +508,12 @@ static int eva_rawchip_vreg_on(void)
 {
 	int ret;
 
-	pr_info("[CAM] rawchip power on ++\n");
-
 	/* enable main clock */
 	struct clk *csus_clk = NULL;
 	struct clk *sensor_clk = NULL;
+
+	pr_info("[CAM] rawchip power on ++\n");
+
 	csus_clk = clk_get(NULL, "csus");
 	if (IS_ERR_OR_NULL(csus_clk)) {
 		pr_err("%s: couldn't get csus clock\n", __func__);
@@ -563,11 +564,12 @@ static int eva_rawchip_vreg_on(void)
 
 static int eva_rawchip_vreg_off(void)
 {
-	pr_info("[CAM] rawchip power off ++\n");
-
 	/* disable main clock */
 	struct clk *csus_clk = NULL;
 	struct clk *sensor_clk = NULL;
+
+	pr_info("[CAM] rawchip power off ++\n");
+
 	csus_clk = clk_get(NULL, "csus");
 	if (IS_ERR_OR_NULL(csus_clk)) {
 		pr_err("%s: couldn't get csus clock\n", __func__);
@@ -809,13 +811,13 @@ static struct uart_clk_parent uart_parent_clk[] = {
 #endif
 };
 static struct tegra_uart_platform_data endeavoru_uart_pdata;
-static struct tegra_uart_platform_data endeavoru_loopback_uart_pdata;
+//static struct tegra_uart_platform_data endeavoru_loopback_uart_pdata;
 
 #ifdef CONFIG_SERIAL_TEGRA_BRCM
 static struct tegra_uart_platform_data endeavoru_brcm_uart_pdata;
 #endif
 
-static struct tegra_uart_platform_data endeavor_uart_pdata;
+//static struct tegra_uart_platform_data endeavor_uart_pdata;
 
 #ifdef CONFIG_BT_CTS_WAKEUP
 static struct tegra_uart_platform_data endeavor_bt_uart_pdata;
@@ -857,6 +859,8 @@ static void __init endeavoru_uart_init(void)
 {
 	int i;
 	struct clk *c;
+	int board_id = 0;
+
 
 	for (i = 0; i < ARRAY_SIZE(uart_parent_clk); ++i) {
 		c = tegra_get_clock_by_name(uart_parent_clk[i].name);
@@ -885,8 +889,7 @@ static void __init endeavoru_uart_init(void)
 	tegra_uarte_device.dev.platform_data = &endeavoru_uart_pdata; // Used for BRCM GPS.
 
 #ifdef CONFIG_BT_CTS_WAKEUP
-	int board_id = htc_get_pcbid_info();
-
+	board_id = htc_get_pcbid_info();
 	endeavor_bt_uart_pdata = endeavoru_uart_pdata;
 	if ((machine_is_endeavoru() && (board_id >= PROJECT_PHASE_XC)))
 	{
@@ -1075,13 +1078,13 @@ static struct mxt_platform_data atmel_mxt_info = {
         .read_chg       = NULL,
 };
 
-static struct i2c_board_info __initdata atmel_i2c_info[] = {
+/*static struct i2c_board_info __initdata atmel_i2c_info[] = {
 	{
 		I2C_BOARD_INFO("atmel_mxt_ts", MXT224_I2C_ADDR1),
 		.irq = TEGRA_GPIO_TO_IRQ(TEGRA_GPIO_PH6),
 		.platform_data = &atmel_mxt_info,
 	}
-};
+};*/
 
 //virtual key for XC board and later (3 virtual keys)
 static ssize_t Aproj_virtual_keys_show_XC(struct kobject *kobj,
@@ -1463,34 +1466,31 @@ static int __init endeavoru_touch_init(void)
 	return retval;
 }
 
-static int endeavoru_usb_hsic_postsupend(void)
+static void endeavoru_usb_hsic_postsupend(void)
 {
 	pr_debug("%s\n", __func__);
 #ifdef CONFIG_TEGRA_BB_XMM_POWER
 	baseband_xmm_set_power_status(BBXMM_PS_L2);
 #endif
-	return 0;
 }
 
-static int endeavoru_usb_hsic_preresume(void)
+static void endeavoru_usb_hsic_preresume(void)
 {
 	pr_debug("%s\n", __func__);
 #ifdef CONFIG_TEGRA_BB_XMM_POWER
 	baseband_xmm_set_power_status(BBXMM_PS_L2TOL0);
 #endif
-	return 0;
 }
 
-static int endeavoru_usb_hsic_phy_ready(void)
+static void endeavoru_usb_hsic_phy_ready(void)
 {
 	pr_debug("%s\n", __func__);
 #ifdef CONFIG_TEGRA_BB_XMM_POWER
 	baseband_xmm_set_power_status(BBXMM_PS_L0);
 #endif
-	return 0;
 }
 
-static int endeavoru_usb_hsic_phy_off(void)
+static void endeavoru_usb_hsic_phy_off(void)
 {
 	pr_debug("%s\n", __func__);
 #ifdef CONFIG_TEGRA_BB_XMM_POWER
@@ -1500,7 +1500,6 @@ static int endeavoru_usb_hsic_phy_off(void)
 	baseband_xmm_set_power_status(BBXMM_PS_L3);
 #endif
 #endif
-	return 0;
 }
 
 static struct tegra_usb_phy_platform_ops hsic_xmm_plat_ops = {
@@ -1756,7 +1755,7 @@ static struct platform_device cable_detect_device = {
 
 static void cable_tegra_gpio_init(void)
 {
-	int ret;
+//	int ret;
 	if (cable_detect_pdata.usb_id_pin_gpio >= 0) {
 		if (gpio_request(cable_detect_pdata.usb_id_pin_gpio, "USB_ID_WAKE") < 0) {
 			pr_err("[CABLE:ERR] %s: cable_detect_pdata.usb_id_pin_gpio req NG\n", __func__);
@@ -1810,7 +1809,8 @@ static void endeavoru_audio_init(void)
 			ARRAY_SIZE(endeavoru_audio_devices));
 }
 
-static void endeavoru_gps_init(void)
+
+/*static void endeavoru_gps_init(void)
 {
 	int rc;
 
@@ -1833,6 +1833,7 @@ static void endeavoru_gps_init(void)
 		pr_err("GPS_RESET_N gpio direction configuration failed:%d\n", rc);
 	gpio_export(TEGRA_GPIO_PBB7, false);
 }
+*/
 
 static struct baseband_power_platform_data tegra_baseband_power_data = {
 	.baseband_type = BASEBAND_XMM,
@@ -1905,7 +1906,8 @@ static struct platform_device tegra_baseband_m7400_device = {
 
 static void endeavoru_modem_init(void)
 {
-        struct board_info board_info;
+        int ret;
+//        struct board_info board_info;
 
         pr_info("%s: enable baseband gpio(s)\n", __func__);
         /* enable baseband gpio(s) */
@@ -1930,7 +1932,6 @@ static void endeavoru_modem_init(void)
 
         // TEGRA_GPIO_PI5
         printk(KERN_INFO"%s: gpio config for sim_det#.", __func__);
-        int ret;
         ret = gpio_request(TEGRA_GPIO_PI5, "sim_det#");
         if (ret < 0)
                 pr_err("[FLT] %s: gpio_request failed for gpio %s\n",
@@ -1984,6 +1985,7 @@ static void gpio_o_l(int gpio, char* name)
         gpio_export(gpio, true);
 }
 
+/*
 static void modem_not_init(void)
 {
         pr_info("%s: disable gpio\n", __func__);
@@ -2003,6 +2005,7 @@ static void modem_not_init(void)
         gpio_o_l(TEGRA_GPIO_PB1, "TEGRA_GPIO_PB1");
 
 }
+*/
 
 static void endeavoru_baseband_init(void)
 {
@@ -2047,7 +2050,7 @@ static struct platform_device enr_reset_keys_device = {
 #define BOOT_DEBUG_LOG_LEAVE(fn) \
 	printk(KERN_NOTICE "[BOOT_LOG] Leaving %s\n", fn);
 
-static int enrkey_wakeup() {
+static int enrkey_wakeup(void) {
 	if ( is_resume_from_deep_suspend() ) {
 		unsigned long status =
 			readl(IO_ADDRESS(TEGRA_PMC_BASE) + PMC_WAKE_STATUS);
@@ -2101,10 +2104,10 @@ int __init ENDEAVORU_PROJECT_keys_init(void)
 
 static int mhl_sii_power(int on)
 {
-	pr_info("[DISP]%s(%d) IN\n", __func__, __LINE__);
-
 	int rc = 0;
-	int err = 0;
+//	int err = 0;
+
+	pr_info("[DISP]%s(%d) IN\n", __func__, __LINE__);
 
 	switch (on) {
 		case 0:
@@ -2167,6 +2170,7 @@ static struct i2c_board_info i2c_mhl_sii_info[] =
 
 static void __init endeavoru_init(void)
 {
+	struct proc_dir_entry* proc;
 	struct kobject *properties_kobj;
 	int board_id = 0;
 	tegra_thermal_init(&thermal_data,
@@ -2213,7 +2217,8 @@ static void __init endeavoru_init(void)
 		printk(KERN_WARNING "[KEY]%s: register reset key fail\n", __func__);
         properties_kobj = kobject_create_and_add("board_properties", NULL);
 	if (properties_kobj) {
-		sysfs_create_group(properties_kobj, &Aproj_properties_attr_group_XC);
+		if (sysfs_create_group(properties_kobj, &Aproj_properties_attr_group_XC))
+			printk(KERN_WARNING "[PROP]%s: sysfs group creation failed\n", __func__);
 	}
 	endeavoru_audio_init();
 	//endeavoru_gps_init();
@@ -2231,8 +2236,6 @@ static void __init endeavoru_init(void)
 	endeavoru_cable_detect_init();
 #endif
 	//endeavoru_nfc_init();
-	
-	struct proc_dir_entry* proc;
 	proc = create_proc_read_entry("dying_processes", 0, NULL, dying_processors_read_proc, NULL);
 	if (!proc)
 		printk(KERN_ERR"Create /proc/dying_processes FAILED!\n");
