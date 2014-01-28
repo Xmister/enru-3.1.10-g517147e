@@ -172,11 +172,6 @@ static unsigned char amp_off[1][3] = {
 
 static int tfa9887_i2c_write(char *txData, int length)
 {
-	if (this_client == NULL) {
-		AUD_ERR("tfa9887_i2c_write client is NULL\n");
-		return -EFAULT;
-	}
-
 	int rc;
 	struct i2c_msg msgs[] = {
 		{
@@ -186,6 +181,12 @@ static int tfa9887_i2c_write(char *txData, int length)
 			.buf = txData,
 		},
 	};
+
+	if (this_client == NULL) {
+                AUD_ERR("tfa9887_i2c_write client is NULL\n");
+                return -EFAULT;
+        }
+
 
 	rc = i2c_transfer(this_client->adapter, msgs, 1);
 	if (rc < 0) {
@@ -197,8 +198,7 @@ static int tfa9887_i2c_write(char *txData, int length)
 	{
 		int i = 0;
 		for (i = 0; i < length; i++)
-			AUD_INFO("%s: tx[%d] = %2x\n", \
-				__func__, i, txData[i]);
+			AUD_INFO("%s: tx[%d] = %2x\n", __func__, i, txData[i]);
 	}
 #endif
 
@@ -207,11 +207,6 @@ static int tfa9887_i2c_write(char *txData, int length)
 
 static int tfa9887_i2c_read(char *rxData, int length)
 {
-	if (this_client == NULL) {
-		AUD_ERR("tfa9887_i2c_read client is NULL\n");
-		return -EFAULT;
-	}
-
 	int rc;
 	struct i2c_msg msgs[] = {
 		{
@@ -221,6 +216,12 @@ static int tfa9887_i2c_read(char *rxData, int length)
 		 .buf = rxData,
 		},
 	};
+
+	if (this_client == NULL) {
+                AUD_ERR("tfa9887_i2c_read client is NULL\n");
+                return -EFAULT;
+        }
+
 
 	rc = i2c_transfer(this_client->adapter, msgs, 1);
 	if (rc < 0) {
@@ -268,19 +269,20 @@ static int tfa9887_release(struct inode *inode, struct file *file)
 
 void set_tfa9887_spkamp(int en, int dsp_mode)
 {
-	if (this_client == NULL) {
-		AUD_ERR("set_tfa9887_spkamp client is NULL\n");
-		return;
-	}
-
 	int i = 0;
-        unsigned char write_reg[1] = {0x03};
+        //unsigned char write_reg[1] = {0x03};
         unsigned char mute_reg[1] = {0x06};
 	unsigned char mute_data[3] = {0, 0, 0};
         unsigned char power_reg[1] = {0x09};
 	unsigned char power_data[3] = {0, 0, 0};
-    unsigned char SPK_CR[3] = {0x8, 0x8, 0};
-    //unsigned char test_data[2] = {0x03, 0};
+    	unsigned char SPK_CR[3] = {0x8, 0x8, 0};
+    	//unsigned char test_data[2] = {0x03, 0};
+
+	if (this_client == NULL) {
+                AUD_ERR("set_tfa9887_spkamp client is NULL\n");
+                return;
+        }
+
 
 	AUD_INFO("%s: en = %d dsp_mode = %d dsp_enabled = %d\n", __func__, en, dsp_mode,dsp_enabled);
 	mutex_lock(&spk_amp_lock);

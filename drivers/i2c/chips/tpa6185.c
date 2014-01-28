@@ -73,11 +73,6 @@ static unsigned char amp_off[2][2] = {
 
 static int tpa6185_i2c_write(char *txData, int length)
 {
-	if (this_client == NULL) {
-		AUD_ERR("tpa6185_i2c_write client is NULL\n");
-		return -EFAULT;
-	}
-
 	int rc;
 	struct i2c_msg msgs[] = {
 		{
@@ -87,6 +82,11 @@ static int tpa6185_i2c_write(char *txData, int length)
 			.buf = txData,
 		},
 	};
+
+	if (this_client == NULL) {
+                AUD_ERR("tpa6185_i2c_write client is NULL\n");
+                return -EFAULT;
+        }
 
 	rc = i2c_transfer(this_client->adapter, msgs, 1);
 	if (rc < 0) {
@@ -98,8 +98,7 @@ static int tpa6185_i2c_write(char *txData, int length)
 	{
 		int i = 0;
 		for (i = 0; i < length; i++)
-			AUD_INFO("%s: tx[%d] = %2x\n", \
-				__func__, i, txData[i]);
+			AUD_INFO("%s: tx[%d] = %2x\n", __func__, i, txData[i]);
 	}
 #endif
 
@@ -108,11 +107,6 @@ static int tpa6185_i2c_write(char *txData, int length)
 
 static int tpa6185_i2c_read(char *rxData, int length)
 {
-	if (this_client == NULL) {
-		AUD_ERR("tpa6185_i2c_read client is NULL\n");
-		return -EFAULT;
-	}
-
 	int rc;
 	struct i2c_msg msgs[] = {
 		{
@@ -122,6 +116,11 @@ static int tpa6185_i2c_read(char *rxData, int length)
 		 .buf = rxData,
 		},
 	};
+
+	if (this_client == NULL) {
+                AUD_ERR("tpa6185_i2c_read client is NULL\n");
+                return -EFAULT;
+        }
 
 	rc = i2c_transfer(this_client->adapter, msgs, 1);
 	if (rc < 0) {
@@ -169,12 +168,12 @@ static int tpa6185_release(struct inode *inode, struct file *file)
 
 void set_tpa6185_headsetamp(int en, int dsp_mode)
 {
+	int i = 0;
+
 	if (this_client == NULL) {
 		AUD_ERR("set_tpa6185_headsetamp client is NULL\n");
 		return;
 	}
-
-	int i = 0;
 
 	AUD_INFO("%s: en = %d dsp_mode = %d\n", __func__, en, dsp_mode);
 	mutex_lock(&headset_amp_lock);

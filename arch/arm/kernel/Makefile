@@ -7,6 +7,9 @@ AFLAGS_head.o        := -DTEXT_OFFSET=$(TEXT_OFFSET)
 
 ifdef CONFIG_FUNCTION_TRACER
 CFLAGS_REMOVE_ftrace.o = -pg
+ifdef CONFIG_ARM_UNWIND
+CFLAGS_REMOVE_unwind.o = -pg
+endif
 endif
 
 CFLAGS_REMOVE_return_address.o = -pg

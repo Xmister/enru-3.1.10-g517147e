@@ -87,21 +87,21 @@ static long unsigned int lp5521_led_tag_status = 0;
 static int __init lp5521_led_tag(char *tag)
 {
 	if (strlen(tag))
-		strict_strtoul(tag, 16, &lp5521_led_tag_status);
-	/* mapping */
-	if (lp5521_led_tag_status == 2)
-		lp5521_led_tag_status = DUAL_COLOR_BLINK;
-	else if(lp5521_led_tag_status == 3)
-		lp5521_led_tag_status = GREEN_ON;
-	else if(lp5521_led_tag_status == 4)
-		lp5521_led_tag_status = AMBER_ON;
-	else if(lp5521_led_tag_status == 5)
-		lp5521_led_tag_status = AMBER_BLINK;
-	else if(lp5521_led_tag_status == 6)
-		lp5521_led_tag_status = AMBER_LOW_BLINK;
-	else
-		lp5521_led_tag_status = 0;
-
+		if (!kstrtoul(tag, 16, &lp5521_led_tag_status)) {
+			/* mapping */
+			if (lp5521_led_tag_status == 2)
+				lp5521_led_tag_status = DUAL_COLOR_BLINK;
+			else if(lp5521_led_tag_status == 3)
+				lp5521_led_tag_status = GREEN_ON;
+			else if(lp5521_led_tag_status == 4)
+				lp5521_led_tag_status = AMBER_ON;
+			else if(lp5521_led_tag_status == 5)
+				lp5521_led_tag_status = AMBER_BLINK;
+			else if(lp5521_led_tag_status == 6)
+				lp5521_led_tag_status = AMBER_LOW_BLINK;
+			else
+				lp5521_led_tag_status = 0;
+		}
 	return 1;
 }
  __setup("led=", lp5521_led_tag);
@@ -1540,7 +1540,7 @@ static int lp5521_led_probe(struct i2c_client *client
 	struct lp5521_chip		*cdata;
 	struct led_i2c_platform_data *pdata;
 	int ret, i;
-	uint8_t data;
+//	uint8_t data;
 
 	printk("[LED][PROBE] led driver probe +++\n");
 

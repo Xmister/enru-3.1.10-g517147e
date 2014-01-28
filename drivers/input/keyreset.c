@@ -52,7 +52,7 @@ struct keyreset_state {
 };
 
 static int restart_requested;
-static unsigned long restart_timeout;
+//static unsigned long restart_timeout;
 
 static volatile int power_off_led_requested = 0;
 static struct hrtimer led_timer;
@@ -86,6 +86,7 @@ static enum hrtimer_restart led_timer_func(struct hrtimer *timer)
 	return HRTIMER_NORESTART;
 }
 
+/*
 static enum hrtimer_restart power_reset_func(struct hrtimer *timer)
 {
 	pr_info("[PWR] %s in (%x)\n", __func__, power_reset_requested);
@@ -99,6 +100,7 @@ static enum hrtimer_restart power_reset_func(struct hrtimer *timer)
 	}
 	return HRTIMER_NORESTART;
 }
+*/
 
 static enum hrtimer_restart temp_timer_func(struct hrtimer *timer)
 {

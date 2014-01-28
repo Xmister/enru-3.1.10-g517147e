@@ -478,7 +478,7 @@ out_overflow:
  */
 static int decode_attrstat(struct xdr_stream *xdr, struct nfs_fattr *result)
 {
-	enum nfs_stat status;
+	enum nfs_stat status=0;
 	int error;
 
 	error = decode_stat(xdr, &status);
@@ -535,7 +535,7 @@ out:
 
 static int decode_diropres(struct xdr_stream *xdr, struct nfs_diropok *result)
 {
-	enum nfs_stat status;
+	enum nfs_stat status=0;
 	int error;
 
 	error = decode_stat(xdr, &status);
@@ -786,7 +786,7 @@ static void nfs2_xdr_enc_readdirargs(struct rpc_rqst *req,
 static int nfs2_xdr_dec_stat(struct rpc_rqst *req, struct xdr_stream *xdr,
 			     void *__unused)
 {
-	enum nfs_stat status;
+	enum nfs_stat status=0;
 	int error;
 
 	error = decode_stat(xdr, &status);
@@ -825,7 +825,7 @@ static int nfs2_xdr_dec_diropres(struct rpc_rqst *req, struct xdr_stream *xdr,
 static int nfs2_xdr_dec_readlinkres(struct rpc_rqst *req,
 				    struct xdr_stream *xdr, void *__unused)
 {
-	enum nfs_stat status;
+	enum nfs_stat status=0;
 	int error;
 
 	error = decode_stat(xdr, &status);
@@ -854,7 +854,7 @@ out_default:
 static int nfs2_xdr_dec_readres(struct rpc_rqst *req, struct xdr_stream *xdr,
 				struct nfs_readres *result)
 {
-	enum nfs_stat status;
+	enum nfs_stat status=0;
 	int error;
 
 	error = decode_stat(xdr, &status);
@@ -990,7 +990,7 @@ out_cheating:
 static int nfs2_xdr_dec_readdirres(struct rpc_rqst *req,
 				   struct xdr_stream *xdr, void *__unused)
 {
-	enum nfs_stat status;
+	enum nfs_stat status=0;
 	int error;
 
 	error = decode_stat(xdr, &status);
@@ -1042,7 +1042,7 @@ out_overflow:
 static int nfs2_xdr_dec_statfsres(struct rpc_rqst *req, struct xdr_stream *xdr,
 				  struct nfs2_fsstat *result)
 {
-	enum nfs_stat status;
+	enum nfs_stat status=0;
 	int error;
 
 	error = decode_stat(xdr, &status);

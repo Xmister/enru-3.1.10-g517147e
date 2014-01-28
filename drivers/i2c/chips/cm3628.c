@@ -715,6 +715,7 @@ static irqreturn_t cm3628_irq_handler(int irq, void *data)
 	return IRQ_HANDLED;
 }
 
+/*
 static int als_power(int enable)
 {
 	struct cm3628_info *lpi = lp_info;
@@ -724,6 +725,7 @@ static int als_power(int enable)
 
 	return 0;
 }
+*/
 
 static void ls_initial_cmd(struct cm3628_info *lpi)
 {
@@ -1234,13 +1236,12 @@ static ssize_t ps_parameters_store(struct device *dev,
 	for (i = 0; i < 2; i++)
 		token[i] = strsep((char **)&buf, " ");
 
-	lpi->ps_thd_set = strict_strtoul(token[0], NULL, 16);
-	PS_cmd_test_value = strict_strtoul(token[1], NULL, 16);
-	printk(KERN_INFO
-		"[PS][CM3628]Set lpi->ps_thd_set = 0x%x, PS_cmd_cmd:value = 0x%x\n",
-		lp_info->ps_thd_set, PS_cmd_test_value);
-	enable_ps_int(PS_cmd_test_value);
-
+	if ( !kstrtoul(token[0], 16, &(lpi->ps_thd_set)) && !kstrtoul(token[1], 16, &PS_cmd_test_value) ) {
+		printk(KERN_INFO
+			"[PS][CM3628]Set lpi->ps_thd_set = 0x%x, PS_cmd_cmd:value = 0x%x\n",
+			lp_info->ps_thd_set, PS_cmd_test_value);
+		enable_ps_int(PS_cmd_test_value);
+	}
 	D("[PS][CM3628] %s\n", __func__);
 
 	return count;
@@ -1616,13 +1617,13 @@ static ssize_t ls_adc_table_store(struct device *dev,
 	printk(KERN_INFO "[LS][CM3628]%s\n", buf);
 	for (i = 0; i < 10; i++) {
 		token[i] = strsep((char **)&buf, " ");
-		tempdata[i] = strict_strtoul(token[i], NULL, 16);
-		if (tempdata[i] < 1 || tempdata[i] > 0xffff) {
-			printk(KERN_ERR
-			"[LS][CM3628 error] adc_table[%d] =  0x%x Err\n",
-			i, tempdata[i]);
-			return count;
-		}
+		if (!kstrtoul(token[i], 16, &(tempdata[i])))
+			if (tempdata[i] < 1 || tempdata[i] > 0xffff) {
+				printk(KERN_ERR
+				"[LS][CM3628 error] adc_table[%d] =  0x%x Err\n",
+				i, tempdata[i]);
+				return count;
+			}
 	}
 	mutex_lock(&als_get_adc_mutex);
 	for (i = 0; i < 10; i++) {
