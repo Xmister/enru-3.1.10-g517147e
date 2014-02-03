@@ -307,9 +307,7 @@ static void cache_reap(struct work_struct *unused);
 static __always_inline int index_of(const size_t size)
 {
 	extern void __bad_size(void);
-
-	if (__builtin_constant_p(size)) {
-		int i = 0;
+	int i = 0;
 
 #define CACHE(x) \
 	if (size <=x) \
@@ -318,9 +316,7 @@ static __always_inline int index_of(const size_t size)
 		i++;
 #include <linux/kmalloc_sizes.h>
 #undef CACHE
-		__bad_size();
-	} else
-		__bad_size();
+	__bad_size();
 	return 0;
 }
 

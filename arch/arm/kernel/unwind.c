@@ -31,7 +31,7 @@
 #warning Your compiler does not have EABI support.
 #warning    ARM unwind is known to compile only with EABI compilers.
 #warning    Change compiler or disable ARM_UNWIND option.
-#elif (__GNUC__ == 4 && __GNUC_MINOR__ <= 2)
+#elif (__GNUC__ == 4 && __GNUC_MINOR__ <= 2) && !defined(__clang__)
 #warning Your compiler is too buggy; it is known to not compile ARM unwind support.
 #warning    Change compiler or disable ARM_UNWIND option.
 #endif
@@ -353,6 +353,7 @@ void unwind_backtrace(struct pt_regs *regs, struct task_struct *tsk)
 {
 	struct stackframe frame;
 	register unsigned long current_sp asm ("sp");
+	asm("" : "=r"(current_sp));
 
 	pr_debug("%s(regs = %p tsk = %p)\n", __func__, regs, tsk);
 

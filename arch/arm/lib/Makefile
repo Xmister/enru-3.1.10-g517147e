@@ -15,6 +15,10 @@ lib-y		:= backtrace.o changebit.o csumipv6.o csumpartial.o   \
 		   ucmpdi2.o lib1funcs.o div64.o                      \
 		   io-readsb.o io-writesb.o io-readsl.o io-writesl.o
 
+ifeq ($(COMPILER),clang)
+lib-y += eabi.o
+endif
+
 mmu-y	:= clear_user.o copy_page.o getuser.o putuser.o
 
 ifneq ($(CONFIG_ARCH_PROVIDES_UDELAY),y)
