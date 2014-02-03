@@ -571,7 +571,15 @@ KBUILD_CPPFLAGS   += $(call cc-option,-Qunused-arguments,)
 ifdef CONFIG_CC_OPTIMIZE_FOR_SIZE
 KBUILD_CFLAGS	+= -Os
 else
+ifeq ($(COMPILER),clang)
+KBUILD_CFLAGS += $(call cc-option, -O2)
+KBUILD_CFLAGS += $(call cc-option, -march=armv7-a)
+KBUILD_CFLAGS += $(call cc-option, -ftree-vectorize)
+KBUILD_CFLAGS += $(call cc-option, -funsafe-math-optimizations)
+KBUILD_CFLAGS += $(call cc-option, -mtune=cortex-a9)
+else
 KBUILD_CFLAGS	+= -O2 -marm -march=armv7-a -mfpu=neon -ftree-vectorize -funsafe-math-optimizations -fsched-spec-load -mcpu=cortex-a9 -mtune=cortex-a9
+endif
 endif
 
 include $(srctree)/arch/$(SRCARCH)/Makefile
